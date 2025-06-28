@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -39,7 +40,7 @@ func RegisterUserController(w http.ResponseWriter, r *http.Request) {
 			Age:       age,
 		}
 		if err := RegisterUserService(newUser, req.Password); err != nil {
-			shared.Error(w, http.StatusInternalServerError, "Failed to register user: "+err.Error(), err.Error())
+			shared.Error(w, http.StatusBadRequest, "Failed to register user", err.Error())
 			return
 		}
 		fmt.Println("new user created : ", newUser)
@@ -47,4 +48,61 @@ func RegisterUserController(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	shared.Success(w, "User Created Successfully", nil)
+}
+
+func LoginUserController(w http.ResponseWriter, r *http.Request) {
+	validate := validator.New()
+	var req dtos.LoginRequestDto
+
+	if error := json.NewDecoder(r.Body).Decode(&req); error != nil {
+		shared.Error(w, http.StatusBadRequest, "Invalid JSON body", error.Error())
+		return
+	}
+	if error := validate.Struct(req); error != nil {
+		http.Error(w, "Validation failed: "+error.Error(), http.StatusBadRequest)
+		return
+	}
+
+	token, err := LoginUserService(req.UsernameOrEmail, req.Password)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrUserNotFound):
+			shared.Error(w, http.StatusNotFound, err.Error(), err.Error())
+		case errors.Is(err, ErrUsernameExists), errors.Is(err, ErrEmailExists):
+			shared.Error(w, http.StatusConflict, err.Error(), err.Error())
+		case errors.Is(err, ErrInvalidPassword):
+			shared.Error(w, http.StatusUnauthorized, err.Error(), err.Error())
+		case errors.Is(err, ErrJWTGeneration):
+			shared.Error(w, http.StatusInternalServerError, err.Error(), err.Error())
+		default:
+			shared.Error(w, http.StatusInternalServerError, "", err.Error())
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	shared.Success(w, "Login successful", map[string]string{
+		"token": token,
+	})
+}
+
+func GetUserProfileController(w http.ResponseWriter, r *http.Request) {
+	userInfo, err := ValidateJWT(r.Header.Get("authentication"))
+	if err != nil {
+		shared.Error(w, http.StatusBadRequest, "Invalid or missing token", err.Error())
+	}
+
+	user, err := GetUserByIDService(userInfo.ID)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrUserNotFound):
+			shared.Error(w, http.StatusNotFound, err.Error(), err.Error())
+		default:
+			shared.Error(w, http.StatusInternalServerError, "", err.Error())
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	shared.Success(w, "User retrieved successfully", user)
 }
