@@ -87,12 +87,18 @@ func LoginUserController(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserProfileController(w http.ResponseWriter, r *http.Request) {
-	userInfo, err := ValidateJWT(r.Header.Get("authentication"))
-	if err != nil {
-		shared.Error(w, http.StatusBadRequest, "Invalid or missing token", err.Error())
+	userID := r.Context().Value(userIDKey)
+	if userID == nil {
+		http.Error(w, "User not found in context", http.StatusInternalServerError)
+		return
 	}
 
-	user, err := GetUserByIDService(userInfo.ID)
+	userIDStr, ok := userID.(string)
+	if !ok {
+		http.Error(w, "User ID in context is not a string", http.StatusInternalServerError)
+		return
+	}
+	user, err := GetUserByIDService(userIDStr)
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrUserNotFound):
@@ -104,5 +110,16 @@ func GetUserProfileController(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	shared.Success(w, "User retrieved successfully", user)
+
+	response := dtos.UserProfileResponseDto {
+		FirstName: user.FirstName,
+		LastName: user.LastName,
+		Email: user.Email,
+		Username: user.Username,
+		Age: user.Age,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	shared.Success(w, "User retrieved successfully", response)
 }
