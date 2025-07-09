@@ -6,10 +6,10 @@ import (
 )
 
 type BaseResponse struct {
-	IsSucess bool        `json:"is_success"`       // Indicates if the operation was successful
-	Message  string      `json:"message"`          // Short message
-	Data     any `json:"data,omitempty"`   // Optional payload
-	Errors   any `json:"errors,omitempty"` // Optional validation or system errors
+	IsSucess bool   `json:"is_success"`       // Indicates if the operation was successful
+	Message  string `json:"message"`          // Short message
+	Data     any    `json:"data,omitempty"`   // Optional payload
+	Errors   any    `json:"errors,omitempty"` // Optional validation or system errors
 }
 
 func JSON(w http.ResponseWriter, statusCode int, res BaseResponse) {
@@ -18,7 +18,7 @@ func JSON(w http.ResponseWriter, statusCode int, res BaseResponse) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func Success(w http.ResponseWriter, message string, data interface{}) {
+func Success(w http.ResponseWriter, message string, data any) {
 	JSON(w, http.StatusOK, BaseResponse{
 		IsSucess: true,
 		Message:  message,
@@ -26,10 +26,10 @@ func Success(w http.ResponseWriter, message string, data interface{}) {
 	})
 }
 
-func Error(w http.ResponseWriter, statusCode int, message string, err interface{}) {
+func Error(w http.ResponseWriter, statusCode int, message string, err any) {
 	JSON(w, statusCode, BaseResponse{
 		IsSucess: false,
-		Message: message,
-		Errors:  err,
+		Message:  message,
+		Errors:   err,
 	})
 }
