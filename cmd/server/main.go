@@ -3,9 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-
 	"musicfy/internal/auth"
-
 	"github.com/gorilla/mux"
 )
 
