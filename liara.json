@@ -1,0 +1,7 @@
+{
+  "port": 8080,
+  "go": {
+    "procfile" : "main.go",
+    "version": "1.24.4"
+  }
+}
