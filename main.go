@@ -6,11 +6,13 @@ import (
 	"musicfy/internal/auth/models"
 	"musicfy/internal/db"
 	"net/http"
-
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
+	auth.InitJWT() 
 	db.InitializeDatabase()
 	database := db.GetDatabase()
 	database.AutoMigrate(&models.User{})
