@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 
 	"musicfy/internal/auth/dtos"
 	"musicfy/internal/auth/models"
@@ -98,7 +99,14 @@ func GetUserProfileController(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User ID in context is not a string", http.StatusInternalServerError)
 		return
 	}
-	user, err := GetUserByIDService(userIDStr)
+
+	uuidValue, err := uuid.Parse(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	user, err := GetUserByIDService(uuidValue)
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrUserNotFound):
@@ -111,12 +119,12 @@ func GetUserProfileController(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 
-	response := dtos.UserProfileResponseDto {
+	response := dtos.UserProfileResponseDto{
 		FirstName: user.FirstName,
-		LastName: user.LastName,
-		Email: user.Email,
-		Username: user.Username,
-		Age: user.Age,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		Username:  user.Username,
+		Age:       user.Age,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}

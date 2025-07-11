@@ -2,12 +2,19 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"musicfy/internal/auth"
+	"musicfy/internal/auth/models"
+	"musicfy/internal/db"
+	"net/http"
+
 	"github.com/gorilla/mux"
 )
 
 func main() {
+	db.InitializeDatabase()
+	database := db.GetDatabase()
+	database.AutoMigrate(&models.User{})
+
 	router := mux.NewRouter()
 
 	apiRouter := router.PathPrefix("/api/v1").Subrouter()

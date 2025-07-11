@@ -34,7 +34,7 @@ func RegisterUserService(newUser models.User, rawPassword string) error {
 		return errors.New(ErrEmailExists.Error())
 	}
 
-	newUser.ID = uuid.New().String()
+	newUser.ID = uuid.New()
 
 	// 3. Save to store
 	userStore = append(userStore, newUser)
@@ -63,7 +63,7 @@ func LoginUserService(usernameOrEmail, password string) (string, error) {
 	return "", errors.New(ErrUserNotFound.Error())
 }
 
-func GetUserByIDService(id string) (*models.User, error) {
+func GetUserByIDService(id uuid.UUID) (*models.User, error) {
 	// 1. Find user by ID
 	for _, user := range userStore {
 		if user.ID == id {

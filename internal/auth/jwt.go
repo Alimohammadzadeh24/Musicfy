@@ -4,17 +4,18 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var jwtKey = []byte("your_secret_key") // Change this to a secure key
 
 type Claims struct {
-	UserID   string  `json:"user_id"`
+	UserID   uuid.UUID  `json:"user_id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(userID string, username string) (string, error) {
+func GenerateJWT(userID uuid.UUID, username string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		UserID:   userID,
