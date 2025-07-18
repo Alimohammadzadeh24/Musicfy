@@ -10,7 +10,7 @@ Musicfy is a modern, scalable music streaming platform built with Go. It provide
 - RESTful API (versioned)
 - Modular, clean architecture
 - PostgreSQL database integration
-- Environment-based configuration
+- Environment-based configuration (development, production, testing)
 - Ready for deployment (e.g., Liara, Docker)
 
 ## Project Structure
@@ -18,8 +18,11 @@ Musicfy is a modern, scalable music streaming platform built with Go. It provide
 ```
 internal/
   auth/         # Authentication logic, controllers, services, models, DTOs
+  config/       # Configuration management
   db/           # Database connection and initialization
   shared/       # Shared utilities and response formatting
+config/         # Environment configuration files
+scripts/        # Utility scripts
 main.go         # Application entry point
 ```
 
@@ -27,13 +30,14 @@ main.go         # Application entry point
 
 - **Language:** Go 1.22+
 - **Web Framework:** net/http, Gorilla Mux
-- **Database:** PostgreSQL (via GORM)
+- **Database:** PostgreSQL (via database/sql)
 - **Auth:** JWT (github.com/golang-jwt/jwt)
 - **Validation:** go-playground/validator
 
 ## Getting Started
 
 ### Prerequisites
+
 - Go 1.22 or higher
 - PostgreSQL database
 
@@ -48,19 +52,46 @@ main.go         # Application entry point
    ```sh
    go mod download
    ```
-3. **Set environment variables:**
-   Create a `.env` file in the root directory with the following:
-   ```env
-   DATABASE_URL=postgres://user:password@localhost:5432/musicfy?sslmode=disable
-   JWT_SECRET=your_jwt_secret
-   ```
-4. **Run database migrations:**
-   The app auto-migrates the User model on startup.
-5. **Start the server:**
+3. **Set up environment configuration:**
+   Copy the example environment file and edit it with your settings:
+
    ```sh
-   go run main.go
+   cp env.example .env
    ```
-   The server will run on `http://localhost:8080` by default.
+
+   Then edit the `.env` file with your specific configuration.
+
+4. **Run the application:**
+
+   ```sh
+   # Run in development mode (default)
+   make dev
+
+   # Or run in production mode
+   make prod
+
+   # Or run in testing mode
+   make test
+   ```
+
+## Environment Configuration
+
+Musicfy uses a single `.env` file for configuration. The application behavior changes based on the `APP_ENV` setting:
+
+- `APP_ENV=development` - Development mode with detailed logging and debug endpoints
+- `APP_ENV=production` - Production mode with optimized settings
+- `APP_ENV=testing` - Testing mode with isolated configuration
+
+Key environment variables:
+
+- `APP_ENV` - Application environment (development, production, testing)
+- `APP_PORT` - Port to run the server on
+- `APP_HOST` - Host to bind the server to
+- `DATABASE_URL` - Database connection string
+- `DB_MAX_CONNS` - Maximum database connections
+- `DB_IDLE_CONNS` - Maximum idle database connections
+- `JWT_SECRET` - Secret key for JWT signing
+- `JWT_EXPIRY_HOURS` - JWT token expiry in hours
 
 ## API Endpoints
 
@@ -118,15 +149,32 @@ All endpoints are prefixed with `/api/v1`.
     }
     ```
 
-## Environment Variables
+## Running in Different Environments
 
-- `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - Secret key for JWT signing
+You can run the application in different environments using the provided Makefile commands:
+
+```sh
+# Development mode
+make dev
+
+# Production mode
+make prod
+
+# Testing mode
+make test
+```
+
+Or using the run script:
+
+```sh
+./scripts/run.sh [development|production|testing]
+```
 
 ## Deployment
 
 - The project is ready for deployment on platforms like Liara, Docker, or any cloud provider.
 - Example `liara.json` is provided for Liara deployment.
+- For production deployment, make sure to set all required environment variables.
 
 ## Contributing
 
@@ -138,4 +186,4 @@ All endpoints are prefixed with `/api/v1`.
 
 ## License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.

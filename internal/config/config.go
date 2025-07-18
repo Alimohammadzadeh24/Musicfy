@@ -53,12 +53,13 @@ var (
 	AppConfig Config
 )
 
-// LoadConfig loads configuration based on the environment
+// LoadConfig loads configuration from .env file and environment variables
 func LoadConfig() {
-	env := getEnvironment()
+	// Load .env file if it exists
+	loadEnvFile()
 
-	// Load environment-specific .env file
-	loadEnvFile(env)
+	// Determine environment
+	env := getEnvironment()
 
 	// Set up configuration based on environment
 	AppConfig = Config{
@@ -80,6 +81,9 @@ func LoadConfig() {
 
 	// Log the current environment
 	log.Printf("Application running in %s mode", env)
+
+	// Validate critical configuration
+	validateConfig()
 }
 
 // getEnvironment determines the current environment
@@ -96,32 +100,27 @@ func getEnvironment() Environment {
 	}
 }
 
-// loadEnvFile loads the appropriate .env file based on environment
-func loadEnvFile(env Environment) {
-	// Base .env file (loaded first for defaults)
-	_ = godotenv.Load(".env")
+// loadEnvFile loads the .env file if it exists
+func loadEnvFile() {
+	// Try to load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("No .env file found, using environment variables")
+	} else {
+		log.Printf("Loaded configuration from .env file")
+	}
+}
 
-	// Environment-specific .env file (overrides defaults)
-	var envFile string
-
-	switch env {
-	case Production:
-		envFile = "config/env/production.env"
-	case Testing:
-		envFile = "config/env/testing.env"
-	default:
-		envFile = "config/env/development.env"
+// validateConfig validates critical configuration settings
+func validateConfig() {
+	// In production, ensure we have a proper JWT secret
+	if IsProduction() && (AppConfig.JWTConfig.Secret == "" ||
+		AppConfig.JWTConfig.Secret == "default_secret_change_in_production") {
+		log.Fatalf("Production environment requires a secure JWT_SECRET to be set")
 	}
 
-	// Load environment-specific file if it exists
-	if _, err := os.Stat(envFile); err == nil {
-		if err := godotenv.Load(envFile); err != nil {
-			log.Printf("Warning: Error loading %s: %v", envFile, err)
-		} else {
-			log.Printf("Loaded environment config from %s", envFile)
-		}
-	} else {
-		log.Printf("No %s file found, using defaults", envFile)
+	// Ensure database URL is set
+	if AppConfig.DBConfig.URL == "" {
+		log.Printf("Warning: DATABASE_URL is not set")
 	}
 }
 

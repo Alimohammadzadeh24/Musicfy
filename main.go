@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	// Load configuration based on environment
+	// Load configuration from .env file
 	config.LoadConfig()
 
 	// Initialize JWT settings

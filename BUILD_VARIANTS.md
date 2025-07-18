@@ -10,21 +10,31 @@ The application supports three different environments:
 2. **Production**: Used for production deployment with optimized settings
 3. **Testing**: Used for running tests with isolated configuration
 
-## Environment-Specific Configuration
+## Environment Configuration
 
-Each environment has its own configuration file in the `config/env` directory:
+The application uses a single `.env` file for configuration. The environment is determined by the `APP_ENV` variable, which can be set to:
 
-- `config/env/development.env`: Development environment configuration
-- `config/env/production.env`: Production environment configuration
-- `config/env/testing.env`: Testing environment configuration
+- `development` (default)
+- `production`
+- `testing`
 
-These files contain environment-specific settings for:
+## Example .env File
 
-- Application host and port
-- Database connection parameters
-- JWT configuration
-- Logging levels
-- Other environment-specific settings
+```env
+# Application Environment (development, production, testing)
+APP_ENV=development
+APP_PORT=8080
+APP_HOST=localhost
+
+# Database Configuration
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/musicfy_dev
+DB_MAX_CONNS=10
+DB_IDLE_CONNS=5
+
+# JWT Configuration
+JWT_SECRET=your_secret_key_here
+JWT_EXPIRY_HOURS=24
+```
 
 ## Running in Different Environments
 
@@ -116,3 +126,13 @@ This will create an executable in the `bin/` directory with environment-specific
 - Mock external services
 - Comprehensive logging for test results
 - Shorter token expiration times
+
+## Git Branches
+
+The repository is organized with three main branches corresponding to the environments:
+
+- `production`: The main production branch, stable and ready for deployment
+- `development`: The development branch for ongoing development
+- `testing`: The testing branch for integration and system tests
+
+Each branch may contain environment-specific configurations and features.

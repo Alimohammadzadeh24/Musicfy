@@ -1,7 +1,14 @@
-.PHONY: dev prod test run build clean
+.PHONY: dev prod test run build clean setup
 
 # Default target
 all: dev
+
+# Setup the project
+setup:
+	@echo "Setting up project..."
+	@cp -n env.example .env || echo ".env file already exists"
+	@mkdir -p data
+	@echo "Setup complete. Edit .env file with your configuration."
 
 # Run in development mode
 dev:
@@ -36,6 +43,7 @@ clean:
 # Help command
 help:
 	@echo "Musicfy Makefile commands:"
+	@echo "  make setup      - Set up the project (copy env.example to .env)"
 	@echo "  make dev        - Run in development mode"
 	@echo "  make prod       - Run in production mode"
 	@echo "  make test       - Run in testing mode"
