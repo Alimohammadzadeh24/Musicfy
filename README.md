@@ -29,7 +29,6 @@ internal/
   config/       # Configuration management
   db/           # Database connection and initialization
   shared/       # Shared utilities and response formatting
-config/         # Environment configuration files
 scripts/        # Utility scripts
 main.go         # Application entry point
 ```
@@ -61,15 +60,22 @@ main.go         # Application entry point
    go mod download
    ```
 3. **Set up environment configuration:**
-   Copy the example environment file and edit it with your settings:
 
    ```sh
-   cp env.example .env
+   make setup
    ```
 
-   Then edit the `.env` file with your specific configuration.
+   This will create a `.env` file from the template and set up the necessary directories.
 
-4. **Run the application:**
+4. **Install Git hooks (optional):**
+
+   ```sh
+   ./scripts/install-hooks.sh
+   ```
+
+   This will install Git hooks that automatically configure the environment when switching branches.
+
+5. **Run the application:**
 
    ```sh
    # Run in development mode (default)
@@ -100,6 +106,36 @@ Key environment variables:
 - `DB_IDLE_CONNS` - Maximum idle database connections
 - `JWT_SECRET` - Secret key for JWT signing
 - `JWT_EXPIRY_HOURS` - JWT token expiry in hours
+
+## Branch and Environment Management
+
+The project includes tools to help manage branches and environments:
+
+### Automatic Environment Configuration
+
+When you switch branches, the environment is automatically configured based on the branch:
+
+- `production` branch → production environment
+- `development` branch → development environment
+- `testing` branch → testing environment
+- Feature branches (`feature/*`) → development environment
+- Hotfix branches (`hotfix/*`) → production environment
+
+### Branch Management Commands
+
+```sh
+# Switch to development branch and set up environment
+make git-dev
+
+# Switch to production branch and set up environment
+make git-prod
+
+# Switch to testing branch and set up environment
+make git-test
+
+# Set up environment based on current branch
+make branch-setup
+```
 
 ## API Endpoints
 

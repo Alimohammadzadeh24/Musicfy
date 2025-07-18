@@ -1,4 +1,4 @@
-.PHONY: dev prod test run build clean setup
+.PHONY: dev prod test run build clean setup branch-setup
 
 # Default target
 all: dev
@@ -10,8 +10,12 @@ setup:
 	@mkdir -p data
 	@echo "Setup complete. Edit .env file with your configuration."
 
+# Set up branch-specific environment
+branch-setup:
+	@./scripts/branch-setup.sh
+
 # Run in development mode
-dev:
+dev: 
 	@echo "Starting in development mode..."
 	@APP_ENV=development go run main.go
 
@@ -40,14 +44,31 @@ clean:
 	@rm -rf bin/
 	@go clean
 
+# Git branch helpers
+git-dev:
+	@git checkout development
+	@./scripts/branch-setup.sh development
+
+git-prod:
+	@git checkout production
+	@./scripts/branch-setup.sh production
+
+git-test:
+	@git checkout testing
+	@./scripts/branch-setup.sh testing
+
 # Help command
 help:
 	@echo "Musicfy Makefile commands:"
-	@echo "  make setup      - Set up the project (copy env.example to .env)"
-	@echo "  make dev        - Run in development mode"
-	@echo "  make prod       - Run in production mode"
-	@echo "  make test       - Run in testing mode"
-	@echo "  make run env=X  - Run in specified environment (development, production, testing)"
-	@echo "  make build      - Build for production"
-	@echo "  make build env=X - Build for specified environment"
-	@echo "  make clean      - Clean build artifacts" 
+	@echo "  make setup        - Set up the project (copy env.example to .env)"
+	@echo "  make branch-setup - Set up environment based on current branch"
+	@echo "  make dev          - Run in development mode"
+	@echo "  make prod         - Run in production mode"
+	@echo "  make test         - Run in testing mode"
+	@echo "  make run env=X    - Run in specified environment (development, production, testing)"
+	@echo "  make build        - Build for production"
+	@echo "  make build env=X  - Build for specified environment"
+	@echo "  make clean        - Clean build artifacts"
+	@echo "  make git-dev      - Switch to development branch and set up environment"
+	@echo "  make git-prod     - Switch to production branch and set up environment"
+	@echo "  make git-test     - Switch to testing branch and set up environment" 
