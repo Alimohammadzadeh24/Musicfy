@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"fmt"
-	"os"
+	"log"
+	"musicfy/internal/config"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -11,14 +11,20 @@ import (
 
 var jwtKey []byte
 
-// InitJWT is a no-op function to explicitly trigger package initialization
+// InitJWT initializes the JWT key from configuration
 func InitJWT() {
-	fmt.Println("init called: loading JWT_SECRET from environment variable")
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		panic("JWT_SECRET environment variable not set")
+	// Ensure config is loaded
+	if config.AppConfig.JWTConfig.Secret == "" {
+		config.LoadConfig()
 	}
+
+	jwtSecret := config.AppConfig.JWTConfig.Secret
+	if jwtSecret == "" {
+		log.Fatalf("JWT secret not configured")
+	}
+
 	jwtKey = []byte(jwtSecret)
+	log.Println("JWT configuration loaded")
 }
 
 type Claims struct {
@@ -28,7 +34,13 @@ type Claims struct {
 }
 
 func GenerateJWT(userID uuid.UUID, username string) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
+	// Get expiry hours from config
+	expiryHours := config.AppConfig.JWTConfig.ExpiryHours
+	if expiryHours <= 0 {
+		expiryHours = 24 // Default to 24 hours
+	}
+
+	expirationTime := time.Now().Add(time.Duration(expiryHours) * time.Hour)
 	claims := &Claims{
 		UserID:   userID,
 		Username: username,

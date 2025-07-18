@@ -3,11 +3,18 @@ package auth
 import (
 	"errors"
 	"musicfy/internal/auth/models"
-	"musicfy/internal/db"
+	"musicfy/internal/auth/repository"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var userRepo repository.UserRepository
+
+// init initializes the repository
+func init() {
+	userRepo = repository.NewUserRepository()
+}
 
 func RegisterUserService(newUser models.User, rawPassword string) error {
 	// 1. Hash password
@@ -19,21 +26,26 @@ func RegisterUserService(newUser models.User, rawPassword string) error {
 	}
 	newUser.PasswordHash = string(hashedPassword)
 
-	// 2. Optionally: check for duplicate username/email in DB
-	dbInstance := db.GetDatabase()
-	var existingUser models.User
-	if err := dbInstance.Where("username = ?", newUser.Username).Or("email = ?", newUser.Email).First(&existingUser).Error; err == nil {
-		if existingUser.Username == newUser.Username {
-			return errors.New(ErrUsernameExists.Error())
-		}
-		if existingUser.Email == newUser.Email {
-			return errors.New(ErrEmailExists.Error())
-		}
+	// 2. Check for duplicate username/email
+	existingByUsername, err := userRepo.FindByUsername(newUser.Username)
+	if err != nil {
+		return err
 	}
-	newUser.ID = uuid.New()
+	if existingByUsername != nil {
+		return ErrUsernameExists
+	}
 
-	// 3. Save to DB
-	if err := dbInstance.Create(&newUser).Error; err != nil {
+	existingByEmail, err := userRepo.FindByEmail(newUser.Email)
+	if err != nil {
+		return err
+	}
+	if existingByEmail != nil {
+		return ErrEmailExists
+	}
+
+	// 3. Create user
+	newUser.ID = uuid.New()
+	if err := userRepo.Create(&newUser); err != nil {
 		return err
 	}
 
@@ -42,16 +54,20 @@ func RegisterUserService(newUser models.User, rawPassword string) error {
 
 func LoginUserService(usernameOrEmail, password string) (string, error) {
 	// 1. Find user by username or email
-	dbInstance := db.GetDatabase()
-	var existingUser models.User
-	if err := dbInstance.Where("username = ?", usernameOrEmail).Or("email = ?", usernameOrEmail).First(&existingUser).Error; err != nil {
+	existingUser, err := userRepo.FindByUsernameOrEmail(usernameOrEmail)
+	if err != nil {
+		return "", err
+	}
+	if existingUser == nil {
 		return "", ErrUserNotFound
 	}
 
+	// 2. Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.PasswordHash), []byte(password)); err != nil {
 		return "", ErrInvalidPassword
 	}
 
+	// 3. Generate JWT token
 	token, err := GenerateJWT(existingUser.ID, existingUser.Username)
 	if err != nil {
 		return "", ErrJWTGeneration
@@ -60,21 +76,24 @@ func LoginUserService(usernameOrEmail, password string) (string, error) {
 }
 
 func GetUserByIDService(id uuid.UUID) (*models.User, error) {
-	// 1. Find user by ID
-	dbInstance := db.GetDatabase()
-	var existingUser models.User
-	if err := dbInstance.Where("ID = ?", id).First(&existingUser).Error; err != nil {
-		return nil, ErrUserNotFound
-	}
-	return &existingUser, nil
-}
-
-// Example: Get user by email using GORM
-func GetUserByEmail(email string) (*models.User, error) {
-	dbInstance := db.GetDatabase()
-	var user models.User
-	if err := dbInstance.Where("email = ?", email).First(&user).Error; err != nil {
+	user, err := userRepo.FindByID(id)
+	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+	return user, nil
+}
+
+// GetUserByEmail finds a user by email
+func GetUserByEmail(email string) (*models.User, error) {
+	user, err := userRepo.FindByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+	return user, nil
 }
