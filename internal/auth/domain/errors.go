@@ -1,7 +1,8 @@
-package auth
+package domain
 
 import "errors"
 
+// Domain-level errors
 var (
 	ErrUserNotFound        = errors.New("user not found")
 	ErrUsernameExists      = errors.New("username already exists")
