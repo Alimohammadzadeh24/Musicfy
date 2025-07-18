@@ -14,9 +14,6 @@ func main() {
 	// Load configuration from .env file
 	config.LoadConfig()
 
-	// Initialize JWT settings
-	auth.InitJWT()
-
 	// Initialize database connection
 	db.InitializeDatabase()
 
@@ -72,7 +69,7 @@ func setupRouter() *mux.Router {
 	}
 
 	// Register auth routes
-	auth.RegisterAuthRoutes(apiRouter)
+	auth.RegisterRoutes(apiRouter)
 
 	return router
 }

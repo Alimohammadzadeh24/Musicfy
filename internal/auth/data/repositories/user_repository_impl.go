@@ -1,51 +1,34 @@
-package repository
+package repositories
 
 import (
 	"database/sql"
 	"errors"
-	"musicfy/internal/auth/models"
+	"musicfy/internal/auth/domain/entities"
+	"musicfy/internal/auth/domain/repositories"
 	"musicfy/internal/db"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-// UserRepository defines the interface for user data access
-type UserRepository interface {
-	Create(user *models.User) error
-	FindByUsername(username string) (*models.User, error)
-	FindByEmail(email string) (*models.User, error)
-	FindByUsernameOrEmail(usernameOrEmail string) (*models.User, error)
-	FindByID(id uuid.UUID) (*models.User, error)
-	Update(user *models.User) error
-}
-
-// PostgresUserRepository implements UserRepository for PostgreSQL
-type PostgresUserRepository struct {
+// UserRepositoryImpl implements the UserRepository interface for PostgreSQL
+type UserRepositoryImpl struct {
 	db *sql.DB
 }
 
 // NewUserRepository creates a new PostgreSQL user repository
-func NewUserRepository() UserRepository {
-	return &PostgresUserRepository{
+func NewUserRepository() repositories.UserRepository {
+	return &UserRepositoryImpl{
 		db: db.GetDB(),
 	}
 }
 
 // Create inserts a new user into the database
-func (r *PostgresUserRepository) Create(user *models.User) error {
+func (r *UserRepositoryImpl) Create(user *entities.User) error {
 	query := `
 		INSERT INTO users (id, first_name, last_name, username, email, age, password_hash, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
-
-	now := time.Now()
-	user.CreatedAt = now
-	user.UpdatedAt = now
-
-	if user.ID == uuid.Nil {
-		user.ID = uuid.New()
-	}
 
 	_, err := r.db.Exec(
 		query,
@@ -64,7 +47,7 @@ func (r *PostgresUserRepository) Create(user *models.User) error {
 }
 
 // FindByUsername finds a user by username
-func (r *PostgresUserRepository) FindByUsername(username string) (*models.User, error) {
+func (r *UserRepositoryImpl) FindByUsername(username string) (*entities.User, error) {
 	query := `
 		SELECT id, first_name, last_name, username, email, age, password_hash, created_at, updated_at
 		FROM users
@@ -75,7 +58,7 @@ func (r *PostgresUserRepository) FindByUsername(username string) (*models.User, 
 }
 
 // FindByEmail finds a user by email
-func (r *PostgresUserRepository) FindByEmail(email string) (*models.User, error) {
+func (r *UserRepositoryImpl) FindByEmail(email string) (*entities.User, error) {
 	query := `
 		SELECT id, first_name, last_name, username, email, age, password_hash, created_at, updated_at
 		FROM users
@@ -86,7 +69,7 @@ func (r *PostgresUserRepository) FindByEmail(email string) (*models.User, error)
 }
 
 // FindByUsernameOrEmail finds a user by username or email
-func (r *PostgresUserRepository) FindByUsernameOrEmail(usernameOrEmail string) (*models.User, error) {
+func (r *UserRepositoryImpl) FindByUsernameOrEmail(usernameOrEmail string) (*entities.User, error) {
 	query := `
 		SELECT id, first_name, last_name, username, email, age, password_hash, created_at, updated_at
 		FROM users
@@ -97,7 +80,7 @@ func (r *PostgresUserRepository) FindByUsernameOrEmail(usernameOrEmail string) (
 }
 
 // FindByID finds a user by ID
-func (r *PostgresUserRepository) FindByID(id uuid.UUID) (*models.User, error) {
+func (r *UserRepositoryImpl) FindByID(id uuid.UUID) (*entities.User, error) {
 	query := `
 		SELECT id, first_name, last_name, username, email, age, password_hash, created_at, updated_at
 		FROM users
@@ -108,7 +91,7 @@ func (r *PostgresUserRepository) FindByID(id uuid.UUID) (*models.User, error) {
 }
 
 // Update updates an existing user in the database
-func (r *PostgresUserRepository) Update(user *models.User) error {
+func (r *UserRepositoryImpl) Update(user *entities.User) error {
 	query := `
 		UPDATE users
 		SET first_name = $1, last_name = $2, username = $3, email = $4, 
@@ -134,8 +117,8 @@ func (r *PostgresUserRepository) Update(user *models.User) error {
 }
 
 // Helper function to find one user by a query
-func (r *PostgresUserRepository) findOneByQuery(query string, args ...interface{}) (*models.User, error) {
-	var user models.User
+func (r *UserRepositoryImpl) findOneByQuery(query string, args ...interface{}) (*entities.User, error) {
+	var user entities.User
 
 	row := r.db.QueryRow(query, args...)
 	err := row.Scan(

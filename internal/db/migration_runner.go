@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -44,7 +43,7 @@ func RunMigrations() error {
 
 	// Get list of migration files
 	migrationsDir := filepath.Join("internal", "db", "migrations")
-	files, err := ioutil.ReadDir(migrationsDir)
+	files, err := os.ReadDir(migrationsDir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("Migrations directory not found: %s", migrationsDir)
@@ -73,7 +72,7 @@ func RunMigrations() error {
 
 		// Read migration file
 		filePath := filepath.Join(migrationsDir, filename)
-		content, err := ioutil.ReadFile(filePath)
+		content, err := os.ReadFile(filePath)
 		if err != nil {
 			return fmt.Errorf("failed to read migration file %s: %w", filename, err)
 		}
