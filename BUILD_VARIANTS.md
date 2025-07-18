@@ -127,12 +127,48 @@ This will create an executable in the `bin/` directory with environment-specific
 - Comprehensive logging for test results
 - Shorter token expiration times
 
-## Git Branches
+## Git Branch Structure
 
-The repository is organized with three main branches corresponding to the environments:
+The repository is organized with three main branches that correspond to the environments:
 
-- `production`: The main production branch, stable and ready for deployment
-- `development`: The development branch for ongoing development
-- `testing`: The testing branch for integration and system tests
+- **production**: The main branch for production code (formerly 'main')
 
-Each branch may contain environment-specific configurations and features.
+  - Contains stable, tested code ready for deployment
+  - Protected branch - requires pull request and review to merge
+  - Tagged for releases
+
+- **development**: The primary development branch
+
+  - Contains features that are complete but pending testing
+  - Target branch for feature branches
+  - Periodically merged into testing for integration testing
+
+- **testing**: The branch for integration and system testing
+  - Used for comprehensive testing before production
+  - Contains features being tested together
+  - When stable, merged into production
+
+### Workflow
+
+1. Feature development:
+
+   - Create feature branches from `development`
+   - Name format: `feature/feature-name`
+   - Merge back to `development` when complete
+
+2. Bug fixes:
+
+   - Create fix branches from `development`
+   - Name format: `fix/bug-name`
+   - Merge back to `development` when complete
+
+3. Hotfixes:
+
+   - Create hotfix branches from `production`
+   - Name format: `hotfix/issue-name`
+   - Merge to both `production` and `development` when complete
+
+4. Release process:
+   - Test in `testing` branch
+   - When ready, merge to `production`
+   - Tag with version number

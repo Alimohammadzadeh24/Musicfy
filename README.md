@@ -13,6 +13,14 @@ Musicfy is a modern, scalable music streaming platform built with Go. It provide
 - Environment-based configuration (development, production, testing)
 - Ready for deployment (e.g., Liara, Docker)
 
+## Branch Structure
+
+The repository is organized with three main branches:
+
+- **production**: The main production branch, stable and ready for deployment
+- **development**: The development branch for ongoing development
+- **testing**: The testing branch for integration and system tests
+
 ## Project Structure
 
 ```
@@ -179,10 +187,13 @@ Or using the run script:
 ## Contributing
 
 1. Fork the repository
-2. Create a new branch (`git checkout -b feature/your-feature`)
+2. Create a new branch from the appropriate base branch:
+   - For new features: `git checkout -b feature/your-feature development`
+   - For bug fixes: `git checkout -b fix/your-fix development`
+   - For hotfixes: `git checkout -b hotfix/your-hotfix production`
 3. Commit your changes
 4. Push to your branch
-5. Open a Pull Request
+5. Open a Pull Request to the appropriate target branch
 
 ## License
 
